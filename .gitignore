@@ -1,8 +1,9 @@
 # Raw data files
 data
 
-# Project Description document
+# Project description document and word document of reflecting on my output
 project_description.pdf
+hw4_output.docx
 
 # History files
 .Rhistory
