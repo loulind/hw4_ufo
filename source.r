@@ -9,10 +9,10 @@ df_filter_usa <- nuforc_sightings %>%
   dplyr::filter(
     (country == "USA") & (state != "-") & (state != "Corrientes") &
     (state != "ENG") & (state != "England") & (state != "GU") & 
-    (state != "GU") & (state != "VI") & (state != "UM")
+    (state != "GU") & (state != "VI") & (state != "UM") & (state != "PR")
     )
 df_sort_state <- df_filter_usa %>% arrange(state)
-df_fix_state_names <- df_sort_state %>%
+df_fix_state_names <- df_sort_state %>%  # fixing incorrect state abbrv
   mutate(state = case_when(
     state == "0" ~ "WI",
     state == "Ca" ~ "CA",
@@ -26,19 +26,45 @@ df_fix_state_names <- df_sort_state %>%
     state == "Wisconsin" ~ "WI",
     TRUE ~ state
   ))
-print(n=52, count(df_fix_state_names, state))
+
+df_fix_shape_names <- df_fix_state_names %>%  # fixing incorrect shape names
+  mutate(shape = case_when(
+    shape == "changing" ~ "Changing",
+    shape == "cigar" ~ "Cigar",
+    shape == "circle" ~ "Circle",
+    shape == "cylinder" ~ "Cylinder",
+    shape == "diamond" ~ "Diamond",
+    shape == "egg" ~ "Egg",
+    shape == "fireball" ~ "Fireball",
+    shape == "flash" ~ "Flash",
+    shape == "light" ~ "Light",
+    shape == "other" ~ "Other",
+    shape == "oval" ~ "Oval",
+    shape == "rectangle" ~ "Rectangle",
+    shape == "sphere" ~ "Sphere",
+    shape == "triangle" ~ "Triangle",
+    shape == "unknown" ~ "Unknown",
+    TRUE ~ shape
+  ))
+
 
 # 3. From US-filtered data, gets count for each shape per state
-shape_cnts <- df_fix_state_names %>%
-  group_by(state) %>%
-  summarize(count = n())  # assigns count var to number of rows per state
-view(shape_cnts)
+df_rm_noshape <- df_fix_shape_names %>%  # drops missing/unknown shapes
+  dplyr::filter(
+    !(is.na(shape)) & (shape != "Other") & (shape != "Unknown")
+    )
+shape_cnts <- df_rm_noshape %>%
+  group_by(state, shape) %>%
+  summarise(count = n(), .groups = 'drop') %>%  # count summary table
+  pivot_wider(names_from = shape, values_from = count, values_fill = 0)
 
 # 4. Cleans and standardizes the shape column
 # 5. Constructs Matrix: rows = states, cols = shape category (sorted a->z)
 state_by_shape_cnts <- matrix()
-# 6. Reports number of distinct shapes and state with most "Circle" shapes
 
+# 6. Reports number of distinct shapes and state with most "Circle" shapes
+count(count(df_fix_shape_names, shape)) - 3  # gives number of unique shapes
+view(shape_cnts)  # state with most Circle sightings is CA
 
 
 ###### TASK 2: PCA on Shapes #######
@@ -47,6 +73,7 @@ state_by_shape_norm <- matrix()
 # 2. Scree plot for principle components
 # 3. Scatter plot of first 2 PCs (each point is a state)
 # 4. Examines first 2 cols of PCA rotation (shapes contributing most to PC1,2)
+
 
 
 
@@ -59,6 +86,7 @@ state_by_shape_norm <- matrix()
 # 6. (OPTIONAL) Word cloud
 # 7. Uses stopwords to remove stopwords from tokens, and remake histogram
 library(stopwords)
+
 
 
 
