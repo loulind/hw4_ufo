@@ -1,6 +1,9 @@
 # Raw data files
 data
 
+# Project Description document
+project_description.pdf
+
 # History files
 .Rhistory
 .Rapp.history
