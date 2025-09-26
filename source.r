@@ -4,10 +4,30 @@ library(tidyverse)
 # 1. Imports nuforc_sightings.csv from data folder
 nuforc_sightings <- read_csv("work/data/nuforc_sightings.csv")
 
-# 2. Filters only reports from USA
-df_filter_usa <- nuforc_sightings %>% dplyr::filter(country == "USA")
-df_sort_state <- df_filter_usa %>% dplyr::arrange(state)
-view(df_sort_state)
+# 2. Filters only reports from USA (Added dplyr:: because of conflict)
+df_filter_usa <- nuforc_sightings %>% 
+  dplyr::filter(
+    (country == "USA") & (state != "-") & (state != "Corrientes") &
+    (state != "ENG") & (state != "England") & (state != "GU") & 
+    (state != "GU") & (state != "VI") & (state != "UM")
+    )
+df_sort_state <- df_filter_usa %>% arrange(state)
+df_fix_state_names <- df_sort_state %>%
+  mutate(state = case_when(
+    state == "0" ~ "WI",
+    state == "Ca" ~ "CA",
+    state == "Fl" ~ "FL",
+    state == "Ca" ~ "CA",
+    state == "Montana" ~ "MT",
+    state == "New York" ~ "NY",
+    state == "NB" ~ "NE",
+    state == "Ohio" ~ "OH",
+    state == "West Virginia" ~ "WV",
+    state == "Wisconsin" ~ "WI",
+    TRUE ~ state
+  ))
+view(df_fix_state_names)
+print(n=67, count(df_fix_state_names, state))
 
 # 3. From US-filtered data, gets count for each shape per state
 # 4. Cleans and standardizes the shape column
