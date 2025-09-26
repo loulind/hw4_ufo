@@ -3,10 +3,13 @@ library(tidyverse)
 ###### TASK 1: Shape Counts #######
 # 1. Imports nuforc_sightings.csv from data folder
 nuforc_sightings <- read_csv("work/data/nuforc_sightings.csv")
-View(nuforc_sightings)
 
 # 2. Filters only reports from USA
-# 3. From US-filtered data, gets count per UFO sighting shape
+df_filter_usa <- nuforc_sightings %>% dplyr::filter(country == "USA")
+df_sort_state <- df_filter_usa %>% dplyr::arrange(state)
+view(df_sort_state)
+
+# 3. From US-filtered data, gets count for each shape per state
 # 4. Cleans and standardizes the shape column
 # 5. Constructs Matrix: rows = states, cols = shape category (sorted a->z)
 state_by_shape_cnts <- matrix()
