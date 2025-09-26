@@ -1,6 +1,7 @@
+library(tidyverse)
+
 ###### TASK 1: Shape Counts #######
 # 1. Imports nuforc_sightings.csv from data folder
-library(readr)
 nuforc_sightings <- read_csv("work/data/nuforc_sightings.csv")
 View(nuforc_sightings)
 
@@ -30,6 +31,7 @@ state_by_shape_norm <- matrix()
 # 5. Creates histogram of most freq words across dataset
 # 6. (OPTIONAL) Word cloud
 # 7. Uses stopwords to remove stopwords from tokens, and remake histogram
+library(stopwords)
 
 
 
