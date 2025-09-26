@@ -26,10 +26,14 @@ df_fix_state_names <- df_sort_state %>%
     state == "Wisconsin" ~ "WI",
     TRUE ~ state
   ))
-view(df_fix_state_names)
-print(n=67, count(df_fix_state_names, state))
+print(n=52, count(df_fix_state_names, state))
 
 # 3. From US-filtered data, gets count for each shape per state
+shape_cnts <- df_fix_state_names %>%
+  group_by(state) %>%
+  summarize(count = n())  # assigns count var to number of rows per state
+view(shape_cnts)
+
 # 4. Cleans and standardizes the shape column
 # 5. Constructs Matrix: rows = states, cols = shape category (sorted a->z)
 state_by_shape_cnts <- matrix()
