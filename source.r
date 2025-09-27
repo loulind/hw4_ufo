@@ -48,29 +48,38 @@ df_fix_shape_names <- df_fix_state_names %>%  # fixing incorrect shape names
   ))
 
 
-# 3. From US-filtered data, gets count for each shape per state
+# 3. Cleans and standardizes the shape column
 df_rm_noshape <- df_fix_shape_names %>%  # drops missing/unknown shapes
   dplyr::filter(
     !(is.na(shape)) & (shape != "Other") & (shape != "Unknown")
     )
-shape_cnts <- df_rm_noshape %>%
+
+# 4. From US-filtered data, gets count for each shape per state
+df_shape_cnts <- df_rm_noshape %>%
   group_by(state, shape) %>%
   summarise(count = n(), .groups = 'drop') %>%  # count summary table
-  pivot_wider(names_from = shape, values_from = count, values_fill = 0)
+  pivot_wider(names_from = shape,  # transform to wide df
+              values_from = count, 
+              values_fill = 0
+              )
 
-# 4. Cleans and standardizes the shape column
 # 5. Constructs Matrix: rows = states, cols = shape category (sorted a->z)
-state_by_shape_cnts <- matrix()
+mat_shape_cnts <- df_shape_cnts %>% 
+  column_to_rownames("state") %>%  # changes to row name
+  as.matrix()  # converts to matrix of counts
 
 # 6. Reports number of distinct shapes and state with most "Circle" shapes
-count(count(df_fix_shape_names, shape)) - 3  # gives number of unique shapes
-view(shape_cnts)  # state with most Circle sightings is CA
+count(count(df_fix_shape_names, shape)) - 3  # prints number of unique shapes
+view(mat_shape_cnts)  # the state with most Circle sightings is CA!
 
 
 ###### TASK 2: PCA on Shapes #######
 # 1. Row-normalizes count matrix: proportions of sighting shape per state
-state_by_shape_norm <- matrix()
+mat_shape_norm <- mat_shape_cnts / rowSums(mat_shape_cnts)
+
 # 2. Scree plot for principle components
+pca_res <- prcomp(mat_shape_norm, center = TRUE, scale. = TRUE)
+
 # 3. Scatter plot of first 2 PCs (each point is a state)
 # 4. Examines first 2 cols of PCA rotation (shapes contributing most to PC1,2)
 
