@@ -1,4 +1,5 @@
 library(tidyverse)
+library(stopwords)
 pdf("~/work/output/hw4_output.pdf", width = 7, height = 5)
 plot.new()
 text(.5, .5, font=2, cex=1.5, "Lou's HW 4: UFO sightings analysis and plots")
@@ -7,6 +8,9 @@ text(.5, .5, font=2, cex=1.5, "Lou's HW 4: UFO sightings analysis and plots")
 
 
 ###### TASK 1: Shape Counts #######
+plot.new()
+text(.5, .5, font=2, cex=1.5, "----- TASK 1: Building shape table -----")
+
 # 1. Imports nuforc_sightings.csv from data folder
 nuforc_sightings <- read_csv("work/data/nuforc_sightings.csv")
 
@@ -17,6 +21,7 @@ df_filter_usa <- nuforc_sightings %>%
     (state != "ENG") & (state != "England") & (state != "GU") & 
     (state != "GU") & (state != "VI") & (state != "UM") & (state != "PR")
     )
+
 df_sort_state <- df_filter_usa %>% arrange(state)
 df_fix_state_names <- df_sort_state %>%  # fixing incorrect state abbrv
   mutate(state = case_when(
@@ -77,8 +82,7 @@ count(count(df_fix_shape_names, shape)) - 3  # gives number of unique shapes
 view(mat_shape_cnts)  # state with most 'Circle' sightings is CA
 plot.new()
 text(.05, 0.5, font=2, cex=0.8, adj=0, 
-"TASK 1: Building shape table\n\n
-Question 1:
+"Question 1:
      How many different shapes are in the dataset?\n
 Answer 1:
      There are 22 unique (non-'Other' or 'Unknown') variables in the dataset\n\n
@@ -92,6 +96,9 @@ Answer 2:
 
 
 ###### TASK 2: PCA on Shapes #######
+plot.new()
+text(.5, .5, font=2, cex=1.5, "----- TASK 2: PCA on Shapes -----")
+
 # 1. Row-normalizes count matrix and computes PCA residuals
 mat_shape_norm <- mat_shape_cnts / rowSums(mat_shape_cnts)
 pca_res <- mat_shape_norm %>% 
@@ -100,8 +107,7 @@ pca_res <- mat_shape_norm %>%
 # 2. Variance explained and Scree plot for principle components
 plot.new()
 text(.05, 0.5, font=2, cex=0.8, adj=0, 
-"TASK 2: PCA on Shapes\n\n
-Question 1:
+"Question 1:
      Can the UFO sightings be summarized by a few key patterns?\n
 Answer 1:
      I was surprised to see that the var explained by PC1 is not that
@@ -127,8 +133,7 @@ ggplot(var_expl_tbl, aes(x = PC, y = var_explained)) +
 # 3. Scatter plot of first 2 PCs (each point is a state)
 plot.new()
 text(.05, 0.5, font=2, cex=0.8, adj=0, 
-"TASK 2: PCA on Shapes\n\n
-Question 2:
+"Question 2:
      Scatterplot of first two PCs: Any regional clusters or outliers?\n
 Answer 2:
      There do not appear to be regional clusters in the scatterplot. However,
@@ -154,8 +159,7 @@ ggplot(pc_scores, aes(x = PC1, y = PC2)) +
 # 4. Examines first 2 cols of PCA rotation (shapes contributing most to PC1,2)
 plot.new()
 text(.05, 0.5, font=2, cex=0.8, adj=0, 
-"TASK 2: PCA on Shapes\n\n
-Question 3:
+"Question 3:
      Which shapes contribute most to first two PCs?\n
 Answer 3:
      Top 3 shapes for each PC in desc order (abs value in parentheses)
@@ -182,20 +186,86 @@ view(top_shapes_pc2)
 
 
 ###### TASK 3: Tokenize Summaries #######
-# 1. Converts everything to lowercase
-# 2. Uses reg exprssn to remove non-ASCII characters
-# 3. Trims white edges + reg exprssn to replace repeated space with single SPC
-# 4. Breaks up summaries into an array of words
+plot.new()
+text(.5, .5, font=2, cex=1.5, "----- TASK 3: Tokenize Summaries -----")
+
+# 1-3. Lowercase, remove non-ASCII, remove edge spaces, and collapse whitespaces
+df_clean_summaries <- df_fix_shape_names %>%
+  mutate(summary_clean = summary %>%
+    str_to_lower() %>%  # lowercase
+    str_replace_all("[^\\x01-\\x7F]", "") %>%  # remove non-ASCII
+    str_trim() %>%  # trim whitespace
+    str_replace_all("\\s+", " ")  # collapse repeated whitespace
+  )
+
+# 4. Breaks up summaries into arrays of words
+ufo_tokens <- df_clean_summaries %>%
+  mutate(tokens = str_split(summary_clean, " "))
+
+ufo_words <- ufo_tokens %>%
+  select(state, tokens) %>%  # removes all vars except state and tokens
+  unnest(tokens) %>%  # expands the arrays in the tokens col to separate cols
+  filter(tokens != "")  # removes empty tokens
+
 # 5. Creates histogram of most freq words across dataset
-# 6. (OPTIONAL) Word cloud
-# 7. Uses stopwords to remove stopwords from tokens, and remake histogram
-library(stopwords)
+plot.new()
+text(.05, 0.5, font=2, cex=0.8, adj=0, 
+"Question 1:
+     What do you observe in this initial output?\n
+Answer 1:
+     The top words appear to be predominantly generic english words\n
+     See next pages for histogram and word cloud"
+)
+
+raw_word_freq <- ufo_words %>%
+  count(tokens, sort = TRUE)  # gives word frequencies before stopwords removed
+raw_word_freq %>%  # histogram of words
+  slice_max(n, n = 20) %>%  # retreives the top 20 words most used words
+  ggplot(aes(x = reorder(tokens, n), y = n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Top 20 Words (Before Stopword Removal)",
+       x = "Word", y = "Count")
+
+# 6. Uses stopwords to remove stopwords from tokens, and remake histogram
+plot.new()
+text(.05, 0.5, font=2, cex=0.8, adj=0, 
+"Question 2:
+     After stopword removal, which words feel most characteristic 
+     of these reports?\n
+Answer 2:
+     After removing stopwords, the histogram appears to reflect words that
+     better represent the summaries--words like...
+     'light, bright, sky, moving, white,' etc\n
+     See page below for histogram of word freqs without stopwords"
+)
+
+stop_words <- stopwords("en")
+
+ufo_words_nostop <- ufo_words %>%
+  filter(!(tokens %in% stop_words))  # filters out if a token is in stopwords
+
+nostop_word_freq <- ufo_words_nostop %>%
+  count(tokens, sort = TRUE)
+
+nostop_word_freq %>%  # histogram with stopwords removed
+  slice_max(n, n = 20) %>%
+  ggplot(aes(x = reorder(tokens, n), y = n)) +
+  geom_col() +
+  coord_flip() +
+  labs(title = "Top 20 Words (After Stopword Removal)",
+       x = "Word", y = "Count")
 
 
 
 
 ###### TASK 4: PCA on Summaries #######
+plot.new()
+text(.5, .5, font=2, cex=1.5, "----- TASK 4: PCA on Summaries -----")
+
 # 1. Defines 'vocabulary' of of top 100 words (≥3 letters)
+
+
 # 2. Creates wide count table with row = state, col = word from vocabulary
 # 3. Row-normalizes count matrix: proportions of word usage per state
 # 4. Scree plot for principle components
