@@ -13,3 +13,4 @@ Steps to run this project:
     chmod -x start.sh
     ```
 4. Go to http://localhost:8787 (user:rstudio, password:123)
+5. Run the whole "source.r" r script. The final outputted PDF should be in the "output" folder
