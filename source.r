@@ -214,7 +214,7 @@ text(.05, 0.5, font=2, cex=0.8, adj=0,
      What do you observe in this initial output?\n
 Answer 1:
      The top words appear to be predominantly generic english words\n
-     See next pages for histogram and word cloud"
+     See next pages for histogram of word frequencies"
 )
 
 raw_word_freq <- ufo_words %>%
@@ -296,7 +296,7 @@ Answer 1:
      Much like the PCA of the shape data, the PCA of the summary data 
      also seems to be all clustered around a singular centroid with a 
      distinct oulier. However the PCA of summary has a few more outliers
-     and appears to be more tightly backed around it's main centroid\n
+     and appears to be more tightly packed around it's main centroid\n
      See below for scree and scatter plots for the summary data"
 )
 
