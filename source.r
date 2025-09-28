@@ -79,7 +79,7 @@ mat_shape_cnts <- df_shape_cnts %>%
 
 # 6. Outputs answers to questions to pdf in output folder
 count(count(df_fix_shape_names, shape)) - 3  # gives number of unique shapes
-view(mat_shape_cnts)  # state with most 'Circle' sightings is CA
+# state with most 'Circle' sightings is CA
 plot.new()
 text(.05, 0.5, font=2, cex=0.8, adj=0, 
 "Question 1:
@@ -128,7 +128,7 @@ ggplot(var_expl_tbl, aes(x = PC, y = var_explained)) +
   geom_point() +
   ylab("Proportion of Variance Explained") +
   xlab("Principal Component") +
-  ggtitle("Variance Explained by PCs of UFO Sightings Dataset")
+  ggtitle("Variance Explained by PCs of UFO Sightings Dataset (shape type)")
 
 # 3. Scatter plot of first 2 PCs (each point is a state)
 plot.new()
@@ -264,12 +264,86 @@ plot.new()
 text(.5, .5, font=2, cex=1.5, "----- TASK 4: PCA on Summaries -----")
 
 # 1. Defines 'vocabulary' of of top 100 words (≥3 letters)
+vocab <- nostop_word_freq %>%
+  filter(str_length(tokens) >= 3) %>%  # filters any words less than 3 chrs
+  slice_max(n, n = 100) %>%  # gives top 100 words
+  pull(tokens)  # extracts the tokens column
+view(vocab)
 
+# 2. Creates wide count table with row = state, col = words 
+df_word_cnts <- ufo_words_nostop %>%
+  filter(tokens %in% vocab) %>%  # keeps only tokens that are in vocab
+  count(state, tokens) %>%  # gives counts of vocab words in each state
+  pivot_wider(names_from = tokens, values_from = n, values_fill = 0)
 
-# 2. Creates wide count table with row = state, col = word from vocabulary
-# 3. Row-normalizes count matrix: proportions of word usage per state
+# 3. Converts to matrix and row-normalizes
+mat_word_cnts <- df_word_cnts %>% 
+  column_to_rownames("state") %>%  # changes to row name
+  as.matrix()  # converts to matrix of counts
+
+mat_word_norm <- mat_word_cnts / rowSums(mat_word_cnts)
+pca_res2 <- mat_word_norm %>% 
+  prcomp(center = TRUE, scale. = TRUE)  # divides each col by it's SD
+
 # 4. Scree plot for principle components
+plot.new()
+text(.05, 0.5, font=2, cex=0.8, adj=0, 
+"Question 1:
+     Compare this analysis with the shape-based PCA from Task 2\n
+Answer 1:
+     Both the summary and shape analyses appear to show a strong usage of 
+     language related to light (eg, 'bright, light, fire' etc).
+     Much like the PCA of the shape data, the PCA of the summary data 
+     also seems to be all clustered around a singular centroid with a 
+     distinct oulier. However the PCA of summary has a few more outliers
+     and appears to be more tightly backed around it's main centroid\n
+     See below for scree and scatter plots for the summary data"
+)
+
+var_explained2 <- (pca_res2$sdev^2) / sum(pca_res2$sdev^2)
+var_expl_tbl2 <- tibble(
+  PC = seq_along(var_explained2),
+  cum_var = cumsum(var_explained2)
+)
+
+ggplot(var_expl_tbl2, aes(x = PC, y = var_explained2)) +
+  geom_col(fill = "steelblue") +
+  geom_line(aes(group = 1)) +
+  geom_point() +
+  ylab("Proportion of Variance Explained") +
+  xlab("Principal Component") +
+  ggtitle("Variance Explained by PCs of UFO Sightings Dataset (word usage)")
+
 # 5. Scatter plot of first 2 PCs (each point is a state)
+pc_scores2 <- as_tibble(pca_res2$x[, 1:2], .name_repair = "minimal") %>%
+  rename(PC1 = 1, PC2 = 2)
+
+ve1_word <- scales::percent(var_explained2[1])  # PC1 for word freq df
+ve2_word <- scales::percent(var_explained2[2])  # PC2 for word freq df
+
+ggplot(pc_scores2, aes(x = PC1, y = PC2)) +
+  geom_point(alpha = 0.6) +
+  labs(
+    title = "PCA Scores Scatterplot (Points = States)",
+    x = paste0("PC1 (", ve1_word, ")"),
+    y = paste0("PC2 (", ve2_word, ")")
+  ) +
+  theme_minimal()
+
 # 6. Examines first 2 cols of PCA rotation (shapes contributing most to PC1,2)
+pc_1and2_rotation2 <- as_tibble(pca_res2$rotation[, 1:2], rownames = "Words")
+
+top_words_pc1 <- pc_1and2_rotation2 %>%
+  select(-PC2) %>%  # removes pc 2
+  arrange(desc(abs(PC1))) %>%  # orders PC1 contributions
+  slice_head(n = 10)  # shows only top 10 contributing shapes
+
+top_words_pc2 <- pc_1and2_rotation2 %>% 
+  select(-PC1) %>%  # removes pc 1
+  arrange(desc(abs(PC2))) %>%  # orders PC1 contributions
+  slice_head(n = 10)  # shows only top 10 contributing shapes
+
+view(top_words_pc1)
+view(top_words_pc2)
 
 dev.off()  # turns off PDF output device
