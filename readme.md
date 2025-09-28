@@ -1,5 +1,9 @@
 Hi! This is the README for Lou's BIOS 611 HW 4 submission
 Steps to run this project:
+
+Here's the link to the project repository:
+https://github.com/loulind/hw4_ufo#
+
 1. Clone rep into desired directory. 
 2. cd into directory and create a file named "data" (copy in nuforc_sightings.csv)
   and create a file named "output" (empty for now)
