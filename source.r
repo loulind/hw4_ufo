@@ -1,4 +1,10 @@
 library(tidyverse)
+pdf("~/work/output/hw4_output.pdf", width = 7, height = 5)
+plot.new()
+text(.5, .5, font=2, cex=1.5, "Lou's HW 4: UFO sightings analysis and plots")
+
+
+
 
 ###### TASK 1: Shape Counts #######
 # 1. Imports nuforc_sightings.csv from data folder
@@ -66,9 +72,21 @@ mat_shape_cnts <- df_shape_cnts %>%
   column_to_rownames("state") %>%  # changes to row name
   as.matrix()  # converts to matrix of counts
 
-# 6. Reports number of distinct shapes and state with most "Circle" shapes
-count(count(df_fix_shape_names, shape)) - 3  # prints number of unique shapes
-view(mat_shape_cnts)  # the state with most Circle sightings is CA!
+# 6. Outputs answers to questions to pdf in output folder
+count(count(df_fix_shape_names, shape)) - 3  # gives number of unique shapes
+view(mat_shape_cnts)  # state with most 'Circle' sightings is CA
+plot.new()
+text(.05, 0.5, font=2, cex=0.8, adj=0, 
+"TASK 1: Building shape table\n\n
+Question 1:
+     How many different shapes are in the dataset?\n
+Answer 1:
+     There are 22 unique (non-'Other' or 'Unknown') variables in the dataset\n\n
+Question 2:
+     Which state has the most sightings of the 'Circle' shape?\n
+Answer 2:
+     California (CA) at 1636 sightings"
+)
 
 
 
@@ -80,6 +98,18 @@ pca_res <- mat_shape_norm %>%
             prcomp(center = TRUE, scale. = TRUE)  # divides each col by it's SD
 
 # 2. Variance explained and Scree plot for principle components
+plot.new()
+text(.05, 0.5, font=2, cex=0.8, adj=0, 
+"TASK 2: PCA on Shapes\n\n
+Question 1:
+     Can the UFO sightings be summarized by a few key patterns?\n
+Answer 1:
+     I was surprised to see that the var explained by PC1 is not that
+     much greater than PC2. The data in their current state do not
+     appear to be effectively represented in fewer dimensions\n
+     See next page for scree plot of PCs." 
+)
+
 var_explained <- (pca_res$sdev^2) / sum(pca_res$sdev^2)
 var_expl_tbl <- tibble(
   PC = seq_along(var_explained),
@@ -92,9 +122,20 @@ ggplot(var_expl_tbl, aes(x = PC, y = var_explained)) +
   geom_point() +
   ylab("Proportion of Variance Explained") +
   xlab("Principal Component") +
-  ggtitle("Scree Plot")
+  ggtitle("Variance Explained by PCs of UFO Sightings Dataset")
 
 # 3. Scatter plot of first 2 PCs (each point is a state)
+plot.new()
+text(.05, 0.5, font=2, cex=0.8, adj=0, 
+"TASK 2: PCA on Shapes\n\n
+Question 2:
+     Scatterplot of first two PCs: Any regional clusters or outliers?\n
+Answer 2:
+     There do not appear to be regional clusters in the scatterplot. However,
+     there does appear to be an outlier on the leftmost side of the graph.\n
+     See next page for scatterplot of PC1 and PC2" 
+)
+
 pc_scores <- as_tibble(pca_res$x[, 1:2], .name_repair = "minimal") %>%
   rename(PC1 = 1, PC2 = 2)
 
@@ -111,6 +152,17 @@ ggplot(pc_scores, aes(x = PC1, y = PC2)) +
   theme_minimal()
 
 # 4. Examines first 2 cols of PCA rotation (shapes contributing most to PC1,2)
+plot.new()
+text(.05, 0.5, font=2, cex=0.8, adj=0, 
+"TASK 2: PCA on Shapes\n\n
+Question 3:
+     Which shapes contribute most to first two PCs?\n
+Answer 3:
+     Top 3 shapes for each PC in desc order (abs value in parentheses)
+     PC1: Light (0.40), Diamond (0.32), Triangle (0.32)
+     PC2: Chevron (0.38), Fireball (0.34), Orb (0.31)"
+)
+
 pc_1and2_rotation <- as_tibble(pca_res$rotation[, 1:2], rownames = "Shapes")
 
 top_shapes_pc1 <- pc_1and2_rotation %>%
@@ -146,7 +198,8 @@ library(stopwords)
 # 1. Defines 'vocabulary' of of top 100 words (≥3 letters)
 # 2. Creates wide count table with row = state, col = word from vocabulary
 # 3. Row-normalizes count matrix: proportions of word usage per state
-state_by_word_norm <- matrix()
 # 4. Scree plot for principle components
 # 5. Scatter plot of first 2 PCs (each point is a state)
 # 6. Examines first 2 cols of PCA rotation (shapes contributing most to PC1,2)
+
+dev.off()  # turns off PDF output device
