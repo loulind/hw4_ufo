@@ -5,8 +5,6 @@ plot.new()
 text(.5, .5, font=2, cex=1.5, "Lou's HW 4: UFO sightings analysis and plots")
 
 
-
-
 ###### TASK 1: Shape Counts #######
 plot.new()
 text(.5, .5, font=2, cex=1.5, "----- TASK 1: Building shape table -----")
